@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class CommoneController {
 
     @GetMapping(value = "/welcome")
-    public String producer(@RequestParam("empName") String empName, @RequestParam("empId") String empId, @RequestParam("salary") int salary) {
+    public String firstPage() {
         return "Hello world";
     }
 }
