@@ -1,0 +1,74 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: app-service
+  name: app-service
+spec:
+  replicas: 1 #CHANGE
+  revisionHistoryLimit: 0
+  minReadySeconds: 45
+  selector:
+    matchLabels:
+      app: app-service
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: app-service
+    spec:
+      nodeSelector:
+        cloud.google.com/gke-nodepool: default-pool
+      containers:
+      - image: gcr.io/ripplehire-qa-new-env/quality/app-service:latest #CHANGE
+        imagePullPolicy: Always
+        name: app-service
+        ports:
+           - containerPort: 8087
+        readinessProbe:
+          httpGet:
+            path: /ap-service/actuator/health
+            port: 8087
+          initialDelaySeconds: 15
+          periodSeconds: 5
+        livenessProbe:
+          httpGet:
+            path: /ap-service/actuator/health
+            port: 8087
+          initialDelaySeconds: 15
+          periodSeconds: 5
+          initialDelaySeconds: 300
+        resources:
+          limits:
+            memory: 2Gi
+          requests:
+            memory: 2Gi  
+#        env:
+#          - name: CURRENCY_EXCHANGE_URI
+#            value: http://currency-exchange
+#          - name: SPRING_PROFILES_ACTIVE
+#            value: kubernetes
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels: #PODS
+    app: app-service
+  name: app-service
+spec:
+  ports:
+  - # nodePort: 30701 #CHANGE
+    port: 8087 #CHANGE
+    protocol: TCP
+    targetPort: 8087 #CHANGE
+  selector:
+    app: app-service
+  sessionAffinity: ClientIP #CHANGE
+#   type: ClusterIP
+  type: NodePort
